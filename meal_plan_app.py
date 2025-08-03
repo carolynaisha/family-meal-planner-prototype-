@@ -1,5 +1,5 @@
 # meal_plan_app.py
-# Streamlit prototype with GPT-4 integration + hyperlink PDF export using fpdf2
+# Streamlit prototype with GPT integration and clickable PDF export using fpdf2
 
 import streamlit as st
 import pandas as pd
@@ -42,7 +42,7 @@ Repeat for Tuesday through Sunday.
 """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use "gpt-4" if your API key has access
+            model="gpt-3.5-turbo",  # change to "gpt-4" if available
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -53,7 +53,7 @@ Repeat for Tuesday through Sunday.
 # -----------------------------
 # STREAMLIT APP
 # -----------------------------
-st.title("🧠 GPT-4 Meal Planner Prototype")
+st.title("🧠 GPT Meal Planner Prototype")
 st.write("Paste your grocery list and receive a 7-day meal plan powered by GPT.")
 
 # Input: Grocery List
@@ -102,8 +102,10 @@ if st.button("Generate 7-Day Meal Plan"):
             pdf.add_page()
             pdf.add_meal_plan(safe_text)
 
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            pdf_bytes = BytesIO(pdf_output)
+            # ✅ Output to memory buffer (fixes encoding issue)
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
 
             st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
@@ -118,5 +120,6 @@ with st.sidebar:
 
     ✨ Add your OpenAI API key to Streamlit secrets as `openai_api_key`.
     """)
+
 
 
