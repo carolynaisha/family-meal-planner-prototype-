@@ -158,8 +158,8 @@ class PDF(FPDF):
         # Detect per-person tweak
         elif line.startswith("- ") and current_meal:
             try:
-                person, tweak = line[2:].split(":", 1)
-                current_meal["tweaks"][person.strip()] = tweak.strip()
+            person, tweak = line[2:].split(":", 1)
+            current_meal["tweaks"][person.strip()] = tweak.strip()
             except ValueError:
                 continue
 
