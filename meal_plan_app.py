@@ -30,17 +30,29 @@ if st.button("Generate Meal Plan"):
     st.success("✅ Meal plan generated!")
 
     # -----------------------------
-    # DUMMY LOGIC FOR DEMO PURPOSES
+    # DYNAMIC MEAL PLAN EXAMPLE
     # -----------------------------
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    meals_by_day = [
+        {"Breakfast": "Bagel + Yogurt", "Lunch": "Taco Beans", "Dinner": "Tofu Curry"},
+        {"Breakfast": "Egg Toast", "Lunch": "Penne + Tomato", "Dinner": "Vegan Sausages + Mash"},
+        {"Breakfast": "Waffles + Banana", "Lunch": "Tofu Stir Fry", "Dinner": "Fish Fingers + Beans"},
+        {"Breakfast": "Cereal Bar + Buttered Toast", "Lunch": "Black Bean Salad", "Dinner": "Coconut Chickpea Curry"},
+        {"Breakfast": "Scrambled Eggs + Bagel", "Lunch": "Chickpeas + Crackers", "Dinner": "Pizza + Greens"},
+        {"Breakfast": "Oat Cream + Toast", "Lunch": "Tofu Wrap", "Dinner": "Smoked Bacon + Veg"},
+        {"Breakfast": "Fruit Yogurt + Breadsticks", "Lunch": "Egg + Bean Bowl", "Dinner": "Apple Pie + Cream"},
+    ]
+
     meal_data = []
-    for day in days:
+    for i, day in enumerate(days):
+        meals = meals_by_day[i]
         meal_data.append({
             "Day": day,
-            "Breakfast": "Bagels + Eggs",
-            "Lunch": "Beans + Toast",
-            "Dinner": "Tofu Curry with Rice"
+            "Breakfast": f"{meals['Breakfast']}\n- Brian: add avocado\n- Rihanna: light portion\n- Joanna: full portion\n- Chlea: add butter",
+            "Lunch": f"{meals['Lunch']}\n- Brian: add chilli\n- Rihanna: low-carb\n- Joanna: add cheese\n- Chlea: add toast",
+            "Dinner": f"{meals['Dinner']}\n- Brian: add greens\n- Rihanna: light version\n- Joanna: double beans\n- Chlea: add cream"
         })
+
     meal_df = pd.DataFrame(meal_data)
     st.dataframe(meal_df)
 
@@ -56,7 +68,7 @@ if st.button("Generate Meal Plan"):
             self.set_font('Arial', 'B', 11)
             self.cell(0, 10, f"{day}", 0, 1)
             self.set_font('Arial', '', 10)
-            self.multi_cell(0, 10, f"Breakfast: {breakfast}\nLunch: {lunch}\nDinner: {dinner}\n")
+            self.multi_cell(0, 10, f"Breakfast: {breakfast}\n\nLunch: {lunch}\n\nDinner: {dinner}\n")
             self.ln(1)
 
     pdf = PDF()
@@ -64,9 +76,8 @@ if st.button("Generate Meal Plan"):
     for _, row in meal_df.iterrows():
         pdf.day_section(row['Day'], row['Breakfast'], row['Lunch'], row['Dinner'])
 
-    pdf_bytes = BytesIO()
-    pdf.output(pdf_bytes)
-    pdf_bytes.seek(0)
+    pdf_output = pdf.output(dest='S').encode('latin-1')
+    pdf_bytes = BytesIO(pdf_output)
 
     st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="meal_plan.pdf", mime="application/pdf")
 
@@ -81,6 +92,7 @@ with st.sidebar:
     3. Click 'Generate Meal Plan'.
     4. View your personalized 7-day plan.
     5. Download the plan as a PDF.
-    
+
     ✨ *This is a prototype. Smart recipe matching and dynamic tweaks coming soon!*
     """)
+
