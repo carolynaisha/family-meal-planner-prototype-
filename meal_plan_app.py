@@ -1,11 +1,13 @@
-# meal_plan_app_prototype.py
-# Streamlit prototype with GPT-4 integration for generating a 7-day meal plan from grocery input
+# meal_plan_app.py
+# Streamlit prototype with GPT-4 integration + hyperlink PDF export using fpdf2
 
 import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 from io import BytesIO
 import openai
+import unicodedata
+import re
 
 # -----------------------------
 # SETUP & CONFIGURATION
@@ -38,10 +40,9 @@ Dinner: Meal name — ingredients used
 
 Repeat for Tuesday through Sunday.
 """
-
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",  # Use "gpt-4" if your API key has access
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -53,7 +54,7 @@ Repeat for Tuesday through Sunday.
 # STREAMLIT APP
 # -----------------------------
 st.title("🧠 GPT-4 Meal Planner Prototype")
-st.write("Paste your grocery list and receive a 7-day meal plan powered by GPT-4.")
+st.write("Paste your grocery list and receive a 7-day meal plan powered by GPT.")
 
 # Input: Grocery List
 grocery_input = st.text_area("🛒 Paste your grocery list (one item per line):", height=200)
@@ -64,25 +65,44 @@ if st.button("Generate 7-Day Meal Plan"):
     elif not openai.api_key:
         st.error("No OpenAI API key found. Please set it via Streamlit secrets.")
     else:
-        with st.spinner("Generating meal plan with GPT-4..."):
+        with st.spinner("Generating meal plan with GPT..."):
             plan_text = generate_meal_plan_via_gpt(grocery_input)
             st.text_area("📋 7-Day Meal Plan:", plan_text, height=600)
 
-            # PDF EXPORT FUNCTION
+            # PDF EXPORT FUNCTION (with hyperlinks using fpdf2)
             class PDF(FPDF):
                 def header(self):
-                    self.set_font('Arial', 'B', 12)
-                    self.cell(0, 10, '7-Day Meal Plan', 0, 1, 'C')
+                    self.set_font("Helvetica", "B", 14)
+                    self.cell(0, 10, "7-Day Meal Plan", ln=True, align="C")
+                    self.ln(4)
 
-                def body(self, text):
-                    self.set_font('Arial', '', 10)
-                    self.multi_cell(0, 10, text)
+                def add_meal_plan(self, text):
+                    self.set_font("Helvetica", "", 10)
+                    lines = text.split("\n")
+                    for line in lines:
+                        url_match = re.search(r'(https?://\S+)', line)
+                        if url_match:
+                            url = url_match.group(1)
+                            display_text = line.replace(url, "").strip(": ")
+                            self.set_text_color(0, 0, 0)
+                            if display_text:
+                                self.cell(0, 8, f"{display_text}:", ln=True)
+                            self.set_text_color(0, 0, 255)
+                            self.set_font(style="U")
+                            self.cell(0, 8, url, ln=True, link=url)
+                            self.set_font(style="")
+                            self.set_text_color(0, 0, 0)
+                        else:
+                            self.cell(0, 8, line, ln=True)
+
+            # Normalize and clean
+            safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
 
             pdf = PDF()
             pdf.add_page()
-            pdf.body(plan_text)
+            pdf.add_meal_plan(safe_text)
 
-            pdf_output = pdf.output(dest='S').encode('latin-1')
+            pdf_output = pdf.output(dest="S").encode("latin-1")
             pdf_bytes = BytesIO(pdf_output)
 
             st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
@@ -93,9 +113,10 @@ with st.sidebar:
     st.markdown("""
     1. Paste your grocery list (one item per line).
     2. Click 'Generate 7-Day Meal Plan'.
-    3. GPT-4 will suggest realistic meals based on the ingredients.
-    4. View the plan or download it as a PDF.
+    3. GPT will suggest realistic meals based on the ingredients.
+    4. View the plan or download it as a PDF with clickable recipe links.
 
     ✨ Add your OpenAI API key to Streamlit secrets as `openai_api_key`.
     """)
+
 
