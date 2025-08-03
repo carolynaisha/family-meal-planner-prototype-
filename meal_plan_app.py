@@ -101,7 +101,7 @@ class PDF(FPDF):
 st.title("🧠 7-Day Meal Planner (No Font Dependency)")
 grocery_input = st.text_area("🛒 Paste your grocery list (one item per line):", height=200)
 st.subheader("👥 Family Member Preferences")
-st.subheader("👥 Family Member Preferences")
+
 
 num_members = st.number_input("How many family members to include?", min_value=1, max_value=10, value=4, step=1)
 
