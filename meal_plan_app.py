@@ -50,52 +50,91 @@ Repeat through Sunday.
 class PDF(FPDF):
     def __init__(self):
         super().__init__()
-        self.set_auto_page_break(auto=True, margin=10)
-        self.set_left_margin(10)
-        self.set_right_margin(10)
+        self.set_auto_page_break(auto=True, margin=12)
+        self.set_left_margin(12)
+        self.set_right_margin(12)
         self.add_page()
         self.set_font("Helvetica", "", 10)
 
     def header(self):
         self.set_font("Helvetica", "B", 14)
         self.cell(0, 10, "7-Day Meal Plan", ln=True, align="C")
-        self.ln(5)
+        self.ln(4)
 
-    def draw_meal(self, title, content, url=None):
-        self.set_fill_color(240, 240, 240)
-        self.set_text_color(0, 0, 0)
-        self.set_font("Helvetica", "B", 10)
-        self.cell(0, 6, title, ln=True, fill=True)
-        self.set_font("Helvetica", "", 10)
-        if url:
-            self.multi_cell(0, 5, content)
-            self.set_text_color(0, 0, 255)
-            self.set_font("Helvetica", "U", 10)
-            self.cell(0, 5, url, ln=True, link=url)
+    def draw_meal_block(self, day, meals):
+        self.set_font("Helvetica", "B", 12)
+        self.set_fill_color(230, 240, 255)
+        self.cell(0, 8, f"\n{day}", ln=True, fill=True)
+
+        for meal in meals:
+            self.set_font("Helvetica", "B", 10)
+            self.cell(0, 6, f"{meal['type']}: {meal['title']}", ln=True)
             self.set_font("Helvetica", "", 10)
-            self.set_text_color(0, 0, 0)
-        else:
-            self.multi_cell(0, 5, content)
-        self.ln(1)
 
-    def add_plan(self, plan_text):
-        lines = plan_text.split("\n")
+            # Ingredients
+            self.multi_cell(0, 5, f"Ingredients: {meal['ingredients']}")
+            self.ln(1)
+
+            # Recipe link
+            if meal.get("link"):
+                self.set_text_color(0, 0, 255)
+                self.set_font("Helvetica", "U", 10)
+                self.cell(0, 5, meal["link"], ln=True, link=meal["link"])
+                self.set_text_color(0, 0, 0)
+                self.set_font("Helvetica", "", 10)
+                self.ln(1)
+
+            # Per-person customizations
+            if meal.get("tweaks"):
+                self.set_font("Helvetica", "I", 10)
+                for person, tweak in meal["tweaks"].items():
+                    self.multi_cell(0, 5, f"  - {person}: {tweak}")
+                self.set_font("Helvetica", "", 10)
+                self.ln(1)
+
+    def add_plan_from_text(self, raw_text):
+        import re
+        lines = raw_text.strip().split("\n")
+        day = None
+        meals = []
+        current_meal = {}
+
         for line in lines:
             line = line.strip()
+            if not line:
+                continue
             if line.rstrip(":") in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
-                self.set_font("Helvetica", "B", 12)
-                self.set_fill_color(200, 220, 255)
-                self.cell(0, 8, f"\n{line.rstrip(':')}", ln=True, fill=True)
-            else:
-                meal_type = next((m for m in ["Breakfast", "Lunch", "Dinner"] if line.startswith(m)), None)
-                if meal_type:
-                    url_match = re.search(r"(https?://\S+)", line)
-                    content = line
-                    url = None
-                    if url_match:
-                        url = url_match.group(1)
-                        content = line.replace(url, "").strip("- :")
-                    self.draw_meal(meal_type, content, url)
+                if day and meals:
+                    self.draw_meal_block(day, meals)
+                day = line.rstrip(":")
+                meals = []
+            elif line.startswith(("Breakfast", "Lunch", "Dinner")):
+                if current_meal:
+                    meals.append(current_meal)
+                parts = line.split(":", 1)
+                meal_type = parts[0].strip()
+                details = parts[1].strip() if len(parts) > 1 else ""
+                link_match = re.search(r"(https?://\S+)", details)
+                link = link_match.group(1) if link_match else None
+                details_no_link = details.replace(link, "").strip("- ") if link else details
+                title_ingredients = details_no_link.split(" - ", 1)
+                title = title_ingredients[0].strip()
+                ingredients = title_ingredients[1].strip() if len(title_ingredients) > 1 else ""
+                current_meal = {
+                    "type": meal_type,
+                    "title": title,
+                    "ingredients": ingredients,
+                    "link": link,
+                    "tweaks": {}
+                }
+            elif line.startswith("- "):  # per-person tweak
+                if current_meal:
+                    person, tweak = line[2:].split(":", 1)
+                    current_meal["tweaks"][person.strip()] = tweak.strip()
+        if current_meal:
+            meals.append(current_meal)
+        if day and meals:
+            self.draw_meal_block(day, meals)
 
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner (No Font Dependency)")
@@ -125,11 +164,10 @@ if st.button("Generate Meal Plan"):
 
             # Create and normalize text for PDF
             safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
-            pdf = PDF()
-            pdf.add_plan(safe_text)
-            pdf_bytes = BytesIO()
-            pdf.output(pdf_bytes)
-            pdf_bytes.seek(0)
-
-            st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
+pdf = PDF()
+pdf.add_plan_from_text(safe_text)
+pdf_bytes = BytesIO()
+pdf.output(pdf_bytes)
+pdf_bytes.seek(0)
+st.download_button("📄 Download PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
