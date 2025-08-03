@@ -88,7 +88,9 @@ class PDF(FPDF):
             if meal.get("tweaks"):
                 self.set_font("Helvetica", "I", 10)
                 for person, tweak in meal["tweaks"].items():
-                    self.multi_cell(0, 5, f"  - {person}: {tweak}")
+                    import textwrap
+wrapped = "\n".join(textwrap.wrap(f"  - {person}: {tweak}", width=90))
+self.multi_cell(0, 5, wrapped)
                 self.set_font("Helvetica", "", 10)
                 self.ln(1)
 
