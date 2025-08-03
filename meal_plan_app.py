@@ -89,21 +89,18 @@ class PDF(FPDF):
                         content = line.replace(url, "").strip("- :")
                     self.draw_meal(f"{icon} {meal_type}", content, url)
 
+# Normalize and create the PDF
+import unicodedata
+safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
+
 pdf = PDF()
-            pdf.add_page()
-            import unicodedata
-            safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
-            pdf.body(safe_text)
+pdf.add_plan(safe_text)
 
-            pdf_bytes = BytesIO()
-            pdf.output(pdf_bytes)
-            pdf_bytes.seek(0)
-            # pdf_output was deprecated
-            pdf_bytes = BytesIO()
-            pdf.output(pdf_bytes)
-            pdf_bytes.seek(0)
+pdf_bytes = BytesIO()
+pdf.output(pdf_bytes)
+pdf_bytes.seek(0)
 
-            st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
+st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal
 
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner")
