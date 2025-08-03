@@ -114,9 +114,9 @@ class PDF(FPDF):
         def add_plan_from_text(self, raw_text):
             import re
             lines = raw_text.strip().split("\n")
-                day = None
-                meals = []
-                current_meal = {}
+            day = None
+            meals = []
+            current_meal = {}
 
             for line in lines:
                 line = line.strip()
