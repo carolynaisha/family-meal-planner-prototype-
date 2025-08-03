@@ -100,7 +100,7 @@ pdf_bytes = BytesIO()
 pdf.output(pdf_bytes)
 pdf_bytes.seek(0)
 
-st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal
+st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner")
