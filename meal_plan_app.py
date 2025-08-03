@@ -41,38 +41,40 @@ class PDF(FPDF):
         self.set_auto_page_break(auto=True, margin=10)
         self.set_left_margin(10)
         self.set_right_margin(10)
+        self.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+        self.set_font("DejaVu", "", 10)
         self.add_page()
-        self.set_font("Helvetica", size=9)
 
     def header(self):
-        self.set_font("Helvetica", "B", 14)
+        self.set_font("DejaVu", "", 14)
         self.cell(0, 10, "7-Day Meal Plan", ln=True, align="C")
         self.ln(5)
 
     def draw_meal(self, title, content, url=None):
         self.set_fill_color(240, 240, 240)
         self.set_text_color(0, 0, 0)
-        self.set_font("Helvetica", "B", 9)
+        self.set_font("DejaVu", "B", 10)
         self.cell(0, 6, title, ln=True, fill=True)
-        self.set_font("Helvetica", "", 9)
+        self.set_font("DejaVu", "", 10)
         if url:
             self.multi_cell(0, 5, content)
             self.set_text_color(0, 0, 255)
-            self.set_font(style="U")
+            self.set_font("DejaVu", "U", 10)
             self.cell(0, 5, url, ln=True, link=url)
-            self.set_font(style="")
+            self.set_font("DejaVu", "", 10)
             self.set_text_color(0, 0, 0)
         else:
             self.multi_cell(0, 5, content)
         self.ln(1)
 
     def add_plan(self, plan_text):
+        import re
         lines = plan_text.split("\n")
         icon_map = {"Breakfast": "🍳", "Lunch": "🥪", "Dinner": "🍽️"}
         for line in lines:
             line = line.strip()
             if line.rstrip(":") in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
-                self.set_font("Helvetica", "B", 11)
+                self.set_font("DejaVu", "", 12)
                 self.set_fill_color(200, 220, 255)
                 self.cell(0, 8, f"\n{line.rstrip(':')}", ln=True, fill=True)
             else:
@@ -86,6 +88,22 @@ class PDF(FPDF):
                         url = url_match.group(1)
                         content = line.replace(url, "").strip("- :")
                     self.draw_meal(f"{icon} {meal_type}", content, url)
+
+pdf = PDF()
+            pdf.add_page()
+            import unicodedata
+            safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
+            pdf.body(safe_text)
+
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
+            # pdf_output was deprecated
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
+
+            st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner")
