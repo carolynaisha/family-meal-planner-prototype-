@@ -106,10 +106,10 @@ class PDF(FPDF):
             if not line:
                 continue
             if line.rstrip(":") in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
-            if day and meals:
-                self.draw_meal_block(day, meals)
-                day = line.rstrip(":")
-                meals = []
+                if day and meals:
+                    self.draw_meal_block(day, meals)
+                    day = line.rstrip(":")
+                    meals = []
 
             elif line.startswith(("Breakfast", "Lunch", "Dinner")):
                 if current_meal:
