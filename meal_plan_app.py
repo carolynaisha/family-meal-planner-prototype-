@@ -84,7 +84,9 @@ if st.button("Generate 7-Day Meal Plan"):
             safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
             pdf.body(safe_text)
 
-            pdf_output = pdf.output(dest='S').encode('latin-1')
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
             pdf_bytes = BytesIO(pdf_output)
 
             st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
