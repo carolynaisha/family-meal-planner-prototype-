@@ -112,15 +112,15 @@ class PDF(FPDF):
                     meals = []
 
             def add_plan_from_text(self, raw_text):
-    import re
-    lines = raw_text.strip().split("\n")
-    day = None
-    meals = []
-    current_meal = {}
+            import re
+            lines = raw_text.strip().split("\n")
+                day = None
+                meals = []
+                current_meal = {}
 
-    for line in lines:
-        line = line.strip()
-        if not line:
+            for line in lines:
+                line = line.strip()
+            if not line:
             continue
 
         # Detect new day
