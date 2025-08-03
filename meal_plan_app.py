@@ -111,7 +111,7 @@ class PDF(FPDF):
                     day = line.rstrip(":")
                     meals = []
 
-            def add_plan_from_text(self, raw_text):
+        def add_plan_from_text(self, raw_text):
             import re
             lines = raw_text.strip().split("\n")
                 day = None
