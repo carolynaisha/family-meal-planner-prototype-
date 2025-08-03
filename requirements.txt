@@ -1,4 +1,4 @@
 streamlit
 pandas
 fpdf
-openai
+openai==0.28
