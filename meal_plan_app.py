@@ -115,8 +115,8 @@ for i in range(num_members):
             profiles[name] = {"goal": goal, "dislikes": dislikes}
 
     with st.expander(f"{name}'s Preferences"):
-        goal = st.selectbox(f"Health goal for {name}", ["General", "Weight Loss", "Energy", "Weight Gain"], key=f"goal_{name}")
-        dislikes = st.text_input(f"Foods to avoid for {name}", key=f"dislikes_{name}")
+        goal = st.selectbox(f"Health goal for {i}", ["General", "Weight Loss", "Energy", "Weight Gain"], key=f"goal_{i}")
+        dislikes = st.text_input(f"Foods to avoid for {i}", key=f"dislikes_{name}")
         profiles[name] = {"goal": goal, "dislikes": dislikes}
 
 if st.button("Generate Meal Plan"):
