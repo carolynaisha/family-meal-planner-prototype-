@@ -102,23 +102,3 @@ pdf_bytes.seek(0)
 
 st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
-# --- Streamlit UI ---
-st.title("🧠 7-Day Meal Planner")
-grocery_input = st.text_area("🛒 Paste your grocery list (one item per line):", height=200)
-
-if st.button("Generate Meal Plan"):
-    if not grocery_input.strip():
-        st.warning("Please enter your grocery list.")
-    else:
-        with st.spinner("Planning meals..."):
-            plan_text = generate_meal_plan(grocery_input)
-            st.text_area("📋 Meal Plan", plan_text, height=600)
-
-            safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
-            pdf = PDF()
-            pdf.add_plan(safe_text)
-            pdf_bytes = BytesIO()
-            pdf.output(pdf_bytes)
-            pdf_bytes.seek(0)
-
-            st.download_button("📄 Download PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
