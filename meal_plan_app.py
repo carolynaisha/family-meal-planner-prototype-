@@ -17,29 +17,31 @@ openai.api_key = st.secrets["openai_api_key"] if "openai_api_key" in st.secrets 
 # -----------------------------
 def generate_meal_plan_via_gpt(grocery_list):
     prompt = f"""
-    You are a helpful meal planner. Given the following grocery list, generate a 7-day meal plan with breakfast, lunch, and dinner.
-    Focus on simple, realistic meals that a family could cook with minimal prep. Only use ingredients from this list:
+You are a family meal planner assistant.
 
-    {grocery_list}
+Your task is to create a 7-day meal plan with breakfast, lunch, and dinner using ONLY the following grocery items:
 
-    Output in this format:
+{grocery_list}
 
-    Monday:
-    Breakfast: ...
-    Lunch: ...
-    Dinner: ...
+Each meal should:
+- Be named as a realistic dish (e.g. "Tofu Stir Fry", "Baked Chickpea Curry")
+- Use ingredients from the list
+- Be simple and quick to prepare
+- Optionally include a real recipe link (e.g. from BBC Good Food or AllRecipes) if known
 
-    Tuesday:
-    Breakfast: ...
-    Lunch: ...
-    Dinner: ...
+Format like this:
 
-    (Continue this format through Sunday)
-    """
+Monday:
+Breakfast: Meal name — ingredients used
+Lunch: Meal name — ingredients used — [Recipe link]
+Dinner: Meal name — ingredients used
+
+Repeat for Tuesday through Sunday.
+"""
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4-1106-preview",
+            model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
@@ -96,3 +98,4 @@ with st.sidebar:
 
     ✨ Add your OpenAI API key to Streamlit secrets as `openai_api_key`.
     """)
+
