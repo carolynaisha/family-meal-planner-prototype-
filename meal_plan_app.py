@@ -121,7 +121,7 @@ class PDF(FPDF):
             for line in lines:
                 line = line.strip()
             if not line:
-                continue
+        continue
 
         # Detect new day
         if line.rstrip(":") in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
