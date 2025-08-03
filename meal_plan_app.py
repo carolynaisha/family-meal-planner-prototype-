@@ -1,5 +1,5 @@
 # meal_plan_app_prototype.py
-# Streamlit prototype for generating a 7-day personalized meal plan
+# Streamlit prototype for generating a 7-day personalized meal plan from user grocery input
 
 import streamlit as st
 import pandas as pd
@@ -7,10 +7,62 @@ from fpdf import FPDF
 from io import BytesIO
 
 # -----------------------------
-# HOUSEHOLD MEMBER PROFILE FORM
+# HELPER FUNCTIONS
+# -----------------------------
+
+def parse_ingredients(raw_text):
+    lines = raw_text.lower().splitlines()
+    keywords = set()
+    for line in lines:
+        if any(term in line for term in ["bagel", "bread"]):
+            keywords.add("bagel")
+        if "egg" in line:
+            keywords.add("egg")
+        if "beans" in line or "kidney" in line:
+            keywords.add("beans")
+        if "chickpea" in line:
+            keywords.add("chickpeas")
+        if "tofu" in line:
+            keywords.add("tofu")
+        if "fish" in line:
+            keywords.add("fish")
+        if "waffle" in line:
+            keywords.add("waffles")
+        if "cream" in line:
+            keywords.add("cream")
+        if "rice" in line:
+            keywords.add("rice")
+        if "pie" in line:
+            keywords.add("pie")
+        if "bacon" in line:
+            keywords.add("bacon")
+    return list(keywords)
+
+def suggest_meals(keywords):
+    templates = {
+        "bagel": "Bagel + Yogurt",
+        "egg": "Scrambled Eggs + Toast",
+        "beans": "Beans on Toast",
+        "chickpeas": "Chickpea Salad",
+        "tofu": "Tofu Stir Fry",
+        "fish": "Fish Fingers + Waffles",
+        "waffles": "Waffles + Banana",
+        "cream": "Oat Cream Pasta",
+        "rice": "Tofu Rice Bowl",
+        "pie": "Apple Pie + Cream",
+        "bacon": "Bacon + Veg"
+    }
+
+    unique_meals = list({templates[k] for k in keywords if k in templates})
+    while len(unique_meals) < 7:
+        unique_meals.append("Mixed Bowl with Available Ingredients")
+    return unique_meals[:7]
+
+# -----------------------------
+# STREAMLIT APP
 # -----------------------------
 st.title("🧠 Smart Meal Planner Prototype")
-st.write("Upload your grocery list and get a personalized 7-day meal plan for your household.")
+st.write("Paste your grocery list and get a personalized 7-day meal plan for your household.")
 
 # Input: Grocery List
 grocery_input = st.text_area("🛒 Paste your grocery list (one item per line):", height=200)
@@ -29,36 +81,25 @@ for member in members:
 if st.button("Generate Meal Plan"):
     st.success("✅ Meal plan generated!")
 
-    # -----------------------------
-    # DYNAMIC MEAL PLAN EXAMPLE
-    # -----------------------------
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    meals_by_day = [
-        {"Breakfast": "Bagel + Yogurt", "Lunch": "Taco Beans", "Dinner": "Tofu Curry"},
-        {"Breakfast": "Egg Toast", "Lunch": "Penne + Tomato", "Dinner": "Vegan Sausages + Mash"},
-        {"Breakfast": "Waffles + Banana", "Lunch": "Tofu Stir Fry", "Dinner": "Fish Fingers + Beans"},
-        {"Breakfast": "Cereal Bar + Buttered Toast", "Lunch": "Black Bean Salad", "Dinner": "Coconut Chickpea Curry"},
-        {"Breakfast": "Scrambled Eggs + Bagel", "Lunch": "Chickpeas + Crackers", "Dinner": "Pizza + Greens"},
-        {"Breakfast": "Oat Cream + Toast", "Lunch": "Tofu Wrap", "Dinner": "Smoked Bacon + Veg"},
-        {"Breakfast": "Fruit Yogurt + Breadsticks", "Lunch": "Egg + Bean Bowl", "Dinner": "Apple Pie + Cream"},
-    ]
+    keywords = parse_ingredients(grocery_input)
+    base_meals = suggest_meals(keywords)
 
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     meal_data = []
-    for i, day in enumerate(days):
-        meals = meals_by_day[i]
+
+    for i in range(7):
+        meal = base_meals[i % len(base_meals)]
         meal_data.append({
-            "Day": day,
-            "Breakfast": f"{meals['Breakfast']}\n- Brian: add avocado\n- Rihanna: light portion\n- Joanna: full portion\n- Chlea: add butter",
-            "Lunch": f"{meals['Lunch']}\n- Brian: add chilli\n- Rihanna: low-carb\n- Joanna: add cheese\n- Chlea: add toast",
-            "Dinner": f"{meals['Dinner']}\n- Brian: add greens\n- Rihanna: light version\n- Joanna: double beans\n- Chlea: add cream"
+            "Day": days[i],
+            "Breakfast": f"{meal}\n- Brian: add avocado\n- Rihanna: light version\n- Joanna: add cereal bar\n- Chlea: add cream",
+            "Lunch": f"{meal}\n- Brian: add greens\n- Rihanna: reduce carbs\n- Joanna: full size\n- Chlea: add butter",
+            "Dinner": f"{meal}\n- Brian: add hot sauce\n- Rihanna: low-cal\n- Joanna: add toast\n- Chlea: full-fat version"
         })
 
     meal_df = pd.DataFrame(meal_data)
     st.dataframe(meal_df)
 
-    # -----------------------------
     # PDF EXPORT FUNCTION
-    # -----------------------------
     class PDF(FPDF):
         def header(self):
             self.set_font('Arial', 'B', 12)
@@ -81,9 +122,7 @@ if st.button("Generate Meal Plan"):
 
     st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="meal_plan.pdf", mime="application/pdf")
 
-# -----------------------------
-# INSTRUCTIONS FOR USE
-# -----------------------------
+# Instructions
 with st.sidebar:
     st.header("💡 How to Use")
     st.markdown("""
@@ -93,6 +132,6 @@ with st.sidebar:
     4. View your personalized 7-day plan.
     5. Download the plan as a PDF.
 
-    ✨ *This is a prototype. Smart recipe matching and dynamic tweaks coming soon!*
+    ✨ *This version matches meals to real ingredients you paste above.*
     """)
 
