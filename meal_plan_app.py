@@ -45,11 +45,11 @@ Repeat through Sunday.
         temperature=0.7,
     )
     return response["choices"][0]["message"]["content"]
-
+st.write("PLAN TEXT for PDF:", plan_text)
 # --- PDF Generator (No custom fonts) ---
 class PDF(FPDF):
     def __init__(self):
-        super().__init__()
+        per().__init__()
         self.set_auto_page_break(auto=True, margin=12)
         self.set_left_margin(12)
         self.set_right_margin(12)
@@ -111,33 +111,63 @@ class PDF(FPDF):
                     day = line.rstrip(":")
                     meals = []
 
-            elif line.startswith(("Breakfast", "Lunch", "Dinner")):
-                if current_meal:
-                    meals.append(current_meal)
-                parts = line.split(":", 1)
-                meal_type = parts[0].strip()
-                details = parts[1].strip() if len(parts) > 1 else ""
-                link_match = re.search(r"(https?://\S+)", details)
-                link = link_match.group(1) if link_match else None
-                details_no_link = details.replace(link, "").strip("- ") if link else details
-                title_ingredients = details_no_link.split(" - ", 1)
-                title = title_ingredients[0].strip()
-                ingredients = title_ingredients[1].strip() if len(title_ingredients) > 1 else ""
-                current_meal = {
-                    "type": meal_type,
-                    "title": title,
-                    "ingredients": ingredients,
-                    "link": link,
-                    "tweaks": {}
-                }
-            elif line.startswith("- "):  # per-person tweak
-                if current_meal:
-                    person, tweak = line[2:].split(":", 1)
-                    current_meal["tweaks"][person.strip()] = tweak.strip()
-        if current_meal:
-            meals.append(current_meal)
-        if day and meals:
-            self.draw_meal_block(day, meals)
+            def add_plan_from_text(self, raw_text):
+    import re
+    lines = raw_text.strip().split("\n")
+    day = None
+    meals = []
+    current_meal = {}
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Detect new day
+        if line.rstrip(":") in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
+            if day and meals:
+                self.draw_meal_block(day, meals)
+            day = line.rstrip(":")
+            meals = []
+            current_meal = {}
+
+        # Detect new meal
+        elif line.startswith(("Breakfast", "Lunch", "Dinner")):
+            if current_meal:
+                meals.append(current_meal)
+            parts = line.split(":", 1)
+            meal_type = parts[0].strip()
+            details = parts[1].strip() if len(parts) > 1 else ""
+
+            link_match = re.search(r"(https?://\S+)", details)
+            link = link_match.group(1) if link_match else None
+            details_no_link = details.replace(link, "").strip("- ") if link else details
+
+            title_ingredients = details_no_link.split(" - ", 1)
+            title = title_ingredients[0].strip()
+            ingredients = title_ingredients[1].strip() if len(title_ingredients) > 1 else ""
+
+            current_meal = {
+                "type": meal_type,
+                "title": title,
+                "ingredients": ingredients,
+                "link": link,
+                "tweaks": {}
+            }
+
+        # Detect per-person tweak
+        elif line.startswith("- ") and current_meal:
+            try:
+                person, tweak = line[2:].split(":", 1)
+                current_meal["tweaks"][person.strip()] = tweak.strip()
+            except ValueError:
+                continue
+
+    # Append last meal and draw final day
+    if current_meal:
+        meals.append(current_meal)
+    if day and meals:
+        self.draw_meal_block(day, meals)
 
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner (No Font Dependency)")
