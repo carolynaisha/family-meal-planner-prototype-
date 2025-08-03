@@ -162,12 +162,13 @@ if st.button("Generate Meal Plan"):
             plan_text = generate_meal_plan(grocery_input, profiles)
             st.text_area("📋 Meal Plan", plan_text, height=600)
 
-            # Create and normalize text for PDF
+            # ✅ Now it's safe to use plan_text here
             safe_text = unicodedata.normalize("NFKD", plan_text).encode("ascii", "ignore").decode("ascii")
-pdf = PDF()
-pdf.add_plan_from_text(safe_text)
-pdf_bytes = BytesIO()
-pdf.output(pdf_bytes)
-pdf_bytes.seek(0)
-st.download_button("📄 Download PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
+            pdf = PDF()
+            pdf.add_plan_from_text(safe_text)
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
+            st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
+
 
