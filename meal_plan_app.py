@@ -10,14 +10,14 @@ openai.api_key = st.secrets["openai_api_key"]
 
 # --- GPT Meal Plan Generator ---
 def generate_meal_plan(grocery_list, profiles):
-people_lines = "\n".join([
-    f"{name}: Goal - {p['goal']}; Dislikes - {p['dislikes']}" for name, p in profiles.items()
-])
+    people_lines = "\n".join([
+        f"{name}: Goal - {p['goal']}; Dislikes - {p['dislikes']}" for name, p in profiles.items()
+    ])
 
-prompt = f"""
-You are a helpful meal planner assistant.
+    prompt = f"""
+You are a helpful meal planning assistant.
 
-Using ONLY the following grocery list, create a realistic 7-day meal plan with breakfast, lunch, and dinner each day.
+Using ONLY the following grocery list, create a realistic 7-day meal plan with breakfast, lunch, and dinner each day. Keep meals quick and practical. Include a brief recipe link where relevant.
 
 Household dietary needs:
 {people_lines}
@@ -30,27 +30,15 @@ Grocery list:
 Format like:
 
 Monday:
-Breakfast: Meal name — ingredients — [optional recipe link]
+Breakfast: Meal name - ingredients - [recipe link]
   - Brian: tweak
   - Rihanna: tweak
-...
-"""
-
-
-Using ONLY the following grocery list, create a realistic 7-day meal plan with breakfast, lunch, and dinner each day. Keep meals quick and practical. Include a brief recipe link where relevant.
-
-Grocery list:
-{grocery_list}
-
-Format like:
-
-Monday:
-Breakfast: Meal name - ingredients - [recipe link]
 Lunch: ...
 Dinner: ...
 
 Repeat through Sunday.
 """
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
