@@ -45,7 +45,7 @@ Grocery list:
 Format like:
 
 Monday:
-Breakfast: Meal name — ingredients — [recipe link]
+Breakfast: Meal name - ingredients - [recipe link]
 Lunch: ...
 Dinner: ...
 
