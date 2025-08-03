@@ -110,6 +110,7 @@ class PDF(FPDF):
                 self.draw_meal_block(day, meals)
                 day = line.rstrip(":")
                 meals = []
+
             elif line.startswith(("Breakfast", "Lunch", "Dinner")):
                 if current_meal:
                     meals.append(current_meal)
