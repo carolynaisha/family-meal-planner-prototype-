@@ -87,7 +87,10 @@ if st.button("Generate 7-Day Meal Plan"):
             pdf_bytes = BytesIO()
             pdf.output(pdf_bytes)
             pdf_bytes.seek(0)
-            pdf_bytes = BytesIO(pdf_output)
+            # pdf_output was deprecated
+            pdf_bytes = BytesIO()
+            pdf.output(pdf_bytes)
+            pdf_bytes.seek(0)
 
             st.download_button("📄 Download Meal Plan PDF", data=pdf_bytes, file_name="7_day_meal_plan.pdf", mime="application/pdf")
 
@@ -102,7 +105,4 @@ with st.sidebar:
 
     ✨ Add your OpenAI API key to Streamlit secrets as `openai_api_key`.
     """)
-
-
-
 
