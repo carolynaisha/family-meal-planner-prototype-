@@ -108,16 +108,12 @@ num_members = st.number_input("How many family members to include?", min_value=1
 profiles = {}
 for i in range(num_members):
     with st.expander(f"Member {i+1}"):
-        name = st.text_input(f"Name", key=f"name_{i}")
+        name = st.text_input("Name", key=f"name_{i}")
         goal = st.selectbox("Health goal", ["General", "Weight Loss", "Energy", "Weight Gain"], key=f"goal_{i}")
         dislikes = st.text_input("Foods to avoid", key=f"dislikes_{i}")
         if name.strip():
             profiles[name] = {"goal": goal, "dislikes": dislikes}
 
-    with st.expander(f"{name}'s Preferences"):
-        goal = st.selectbox(f"Health goal for {i}", ["General", "Weight Loss", "Energy", "Weight Gain"], key=f"goal_{i}")
-        dislikes = st.text_input(f"Foods to avoid for {i}", key=f"dislikes_{name}")
-        profiles[name] = {"goal": goal, "dislikes": dislikes}
 
 if st.button("Generate Meal Plan"):
     if not grocery_input.strip():
