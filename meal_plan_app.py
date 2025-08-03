@@ -9,9 +9,33 @@ import re
 openai.api_key = st.secrets["openai_api_key"]
 
 # --- GPT Meal Plan Generator ---
-def generate_meal_plan(grocery_list):
-    prompt = f"""
+def generate_meal_plan(grocery_list, profiles):
+people_lines = "\n".join([
+    f"{name}: Goal - {p['goal']}; Dislikes - {p['dislikes']}" for name, p in profiles.items()
+])
+
+prompt = f"""
 You are a helpful meal planner assistant.
+
+Using ONLY the following grocery list, create a realistic 7-day meal plan with breakfast, lunch, and dinner each day.
+
+Household dietary needs:
+{people_lines}
+
+For each meal, suggest slight modifications for each family member based on their preferences.
+
+Grocery list:
+{grocery_list}
+
+Format like:
+
+Monday:
+Breakfast: Meal name — ingredients — [optional recipe link]
+  - Brian: tweak
+  - Rihanna: tweak
+...
+"""
+
 
 Using ONLY the following grocery list, create a realistic 7-day meal plan with breakfast, lunch, and dinner each day. Keep meals quick and practical. Include a brief recipe link where relevant.
 
@@ -88,13 +112,22 @@ class PDF(FPDF):
 # --- Streamlit UI ---
 st.title("🧠 7-Day Meal Planner (No Font Dependency)")
 grocery_input = st.text_area("🛒 Paste your grocery list (one item per line):", height=200)
+st.subheader("👥 Family Member Preferences")
+members = ["Brian", "Rihanna", "Joanna", "Chlea"]
+profiles = {}
+
+for name in members:
+    with st.expander(f"{name}'s Preferences"):
+        goal = st.selectbox(f"Health goal for {name}", ["General", "Weight Loss", "Energy", "Weight Gain"], key=f"goal_{name}")
+        dislikes = st.text_input(f"Foods to avoid for {name}", key=f"dislikes_{name}")
+        profiles[name] = {"goal": goal, "dislikes": dislikes}
 
 if st.button("Generate Meal Plan"):
     if not grocery_input.strip():
         st.warning("Please enter your grocery list.")
     else:
         with st.spinner("Planning meals..."):
-            plan_text = generate_meal_plan(grocery_input)
+            plan_text = generate_meal_plan(grocery_input, profiles)
             st.text_area("📋 Meal Plan", plan_text, height=600)
 
             # Create and normalize text for PDF
